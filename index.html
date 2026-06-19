@@ -1,1 +1,55 @@
-terminal
+Penyebab umum untuk "Error 401: invalid_client (flowName=GeneralOAuthFlow)":
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` salah, kosong, atau tidak cocok dengan credential di Google Cloud Console.
+- OAuth Client dibuat bukan sebagai "Web application" (mis. Desktop, Other).
+- Redirect URI tidak tercantum persis di credential (harus sama persis: protocol, host, path).
+- OAuth consent screen belum dikonfig atau belum dipublikasikan (untuk testing harus tambahkan test user).
+- Client ID/Secret dihapus atau project API dinonaktifkan.
+
+Langkah cepat perbaikan (ikuti berurutan):
+
+1) Cek keberadaan variabel env (aman — tidak menampilkan secret):
+```
+cd /home/gan/Projects/luxio
+grep -n \"GOOGLE_\" .env || true
+```
+Jika tidak muncul, salin dari .env.example:
+```
+cp .env.example .env
+# lalu edit .env
+nano .env
+```
+
+2) Pastikan nilai di .env benar (hati‑hati saat menampilkan secret — jangan bagikan):
+- `GOOGLE_CLIENT_ID=...`
+- `GOOGLE_CLIENT_SECRET=...`
+- `GOOGLE_REDIRECT_URI=http://localhost:3000/api/google/callback`
+
+3) Periksa Google Cloud Console:
+- Buka: https://console.cloud.google.com/apis/credentials
+- Di bagian OAuth 2.0 Client IDs, buka credential yang dipakai.
+- Pastikan "Application type" = Web application.
+- Di "Authorized redirect URIs" tambahkan:
+  - `http://localhost:3000/api/google/callback`
+- Simpan, lalu salin Client ID & Secret ke .env.
+
+4) Periksa OAuth consent screen:
+- Buka: https://console.cloud.google.com/apis/credentials/consent
+- Isi nama aplikasi, support email.
+- Jika belum dipublikasi, tambahkan account Anda ke Test users.
+- Simpan / publish.
+
+5) Restart dev server:
+```
+npm run dev
+```
+
+6) Uji kembali:
+- Buka `http://localhost:3000/api/google/auth` atau tekan tombol "Hubungkan Google Calendar" di UI.
+- Jika masih muncul error, buka log terminal untuk pesan lengkap.
+
+Jika masih gagal, saya bisa:
+- Memeriksa isi .env di repo (saya tidak akan meminta secret — kamu bisa paste hanya the client ID non-secret), atau
+- Memberikan panduan langkah-demi-langkah dengan screenshot/urutan klik di Google Console, atau
+- Membuat endpoint debug yang memeriksa keberadaan variabel tanpa menampilkan nilai sensitif.
+
+Mau saya cek dulu apakah `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` sudah ada di .env (saya hanya akan memeriksa keberadaan, bukan nilainya)?
